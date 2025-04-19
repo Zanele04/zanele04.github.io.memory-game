@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="styles.css">
+    <title>Memory Game</title>
+</head>
+
+<body>
+    <h1>Memory Game</h1>
+    <div class="stats">
+        <span id="timer">Time: 0s</span> | <span id="moves">Moves: 0</span>
+    </div>
+    <div class="game-board"></div>
+    <button id="restart">Restart Game</button>
+
+    <script>
+        const letters = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'];
+        const gameBoard = document.querySelector('.game-board');
+        const timerElement = document.getElementById('timer');
+        const movesElement = document.getElementById('moves');
+        const restartButton = document.getElementById('restart');
+
+        let cards = [...letters, ...letters]; // Duplicate letters to form pairs
+        let flippedCards = [];
+        let matchedCards = [];
+        let moves = 0;
+        let timer = 0;
+        let timerInterval;
+
+        // Shuffle cards
+        function shuffle(array) {
+            return array.sort(() => Math.random() - 0.5);
+        }
+
+        // Start the game
+        function startGame() {
+            cards = shuffle(cards);
+            gameBoard.innerHTML = '';
+            moves = 0;
+            timer = 0;
+            matchedCards = [];
+            flippedCards = [];
+            updateStats();
+            clearInterval(timerInterval);
+            timerInterval = setInterval(() => {
+                timer++;
+                updateStats();
+            }, 1000);
+
+            cards.forEach((letter) => {
+                const card = document.createElement('div');
+                card.classList.add('card');
+                card.dataset.letter = letter;
+                card.innerText = '?'; // Start with face-down cards
+                gameBoard.appendChild(card);
+            });
+        }
+
+        // Update timer and move stats
+        function updateStats() {
+            timerElement.innerText = `Time: ${timer}s`;
+            movesElement.innerText = `Moves: ${moves}`;
+        }
+
+        // Flip card function
+        function flipCard(card) {
+            if (flippedCards.length < 2 && !card.classList.contains('flipped') && !card.classList.contains('matched')) {
+                card.classList.add('flipped');
+                card.innerText = card.dataset.letter;
+                flippedCards.push(card);
+
+                if (flippedCards.length === 2) {
+                    checkMatch();
+                }
+            }
+        }
+
+        // Check for matching cards
+        function checkMatch() {
+            moves++;
+            const [card1, card2] = flippedCards;
+            if (card1.dataset.letter === card2.dataset.letter) {
+                card1.classList.add('matched');
+                card2.classList.add('matched');
+                matchedCards.push(card1, card2);
+
+                if (matchedCards.length === cards.length) {
+                    clearInterval(timerInterval);
+                    setTimeout(() => alert(`Congratulations! You matched all pairs in ${timer}s with ${moves} moves!`), 300);
+                }
+            } else {
+                setTimeout(() => {
+                    card1.classList.remove('flipped');
+                    card2.classList.remove('flipped');
+                    card1.innerText = '?';
+                    card2.innerText = '?';
+                }, 1000);
+            }
+            flippedCards = [];
+            updateStats();
+        }
+
+        // Event listener for flipping cards
+        gameBoard.addEventListener('click', (event) => {
+            const card = event.target;
+            if (card.classList.contains('card')) {
+                flipCard(card);
+            }
+        });
+
+        // Event listener for restarting the game
+        restartButton.addEventListener('click', startGame);
+
+        // Initialize the game
+        startGame();
+    </script>
+</body>
+</html>
+
